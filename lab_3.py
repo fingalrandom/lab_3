@@ -1,9 +1,6 @@
+import sys
 from PIL import Image, ImageDraw
-ch = input('1. LSB \n2. Decode\n')
-if ch == 1:
-	nameIM = raw_input('Enter the name of container(*.jpg): ')
-	inTXT = raw_input('Enter the name of text file(*.txt): ')
-	rezIM = raw_input('Enter the name of result image(*.bmp): ')
+def encrypt(nameIM, TXT):
 	try:
 		IM = Image.open(nameIM)
 	except IOError:
@@ -11,12 +8,6 @@ if ch == 1:
 		exit()
 	sizeI = IM.size
 	curWid = 0;	curHeig = 0
-	try:
-		f = open(inTXT, "r")
-	except IOError:
-		print('Text file not open')
-		exit()
-	TXT = f.read()
 	TXTlen = len(TXT)
 	hBit = []
 	
@@ -46,12 +37,9 @@ if ch == 1:
 		G = ((px[1] >> 3) << 3) + hBit[i * 3 + 1]
 		B = ((px[2] >> 3) << 3) + hBit[i * 3 + 2]
 		IM.putpixel((curWid, curHeig), (R,G,B))
-		curHeig = curHeig + 1
-	IM.save(rezIM, "BMP")
-	f.close()
-elif ch == 2:
-	nameIM = raw_input('Enter the name of container(*.bmp): ')
-	rezTXT = raw_input('Enter the name of result file(*.txt): ')
+		curHeig += 1
+	return IM
+def decrypt(nameIM):
 	try:
 		IM = Image.open(nameIM)
 	except IOError:
@@ -82,8 +70,30 @@ elif ch == 2:
 		cur = chr((td1 << 6) + (td2 << 3) + td3)
 		tmp = tmp + cur
 		curHeig = curHeig + 1
-	f = open(rezTXT, 'w')
-	f.write(tmp)
-	f.close()
-else:
-	print('Error! Irregular number.')
+	return tmp
+def main():
+	print "Example of main string for encode[-c]:"
+	print "[*.py] [input file name] [container file name] [out file name]"
+	print "Example of main string for decode[-d]:"
+	print "[*.py] [container file name] [result file name]"
+	
+	countPar = len(sys.argv)
+	if countPar == 4:
+		inFileName = sys.argv[1]
+		contFileName = sys.argv[2]
+		outFileName = sys.argv[3]
+		with open(inFileName, 'r') as inFile:
+			TXT = inFile.read()
+		rez = encrypt(contFileName, TXT)
+		rez.save(outFileName, "BMP")
+	elif countPar == 3:
+		contFileName = sys.argv[1]
+		rezFileName = sys.argv[2]
+		rez = decrypt(contFileName)
+		with open(rezFileName, 'w') as rezFile:
+			rezFile.write(rez)
+	else:
+		print "There is wrong number of parameters."
+		exit()
+if __name__ == "__main__":
+    main()
